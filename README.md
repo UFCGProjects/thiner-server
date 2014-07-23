@@ -1,2 +1,2 @@
-pomt-server
+thiner-server
 ===========
