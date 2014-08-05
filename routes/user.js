@@ -96,7 +96,7 @@ router.post('/edit', function (req, res) {
 router.get('/search', function (req, res) {
     var rules = { 'username': new RegExp('^' + req.query.username + '$', "i") };
 
-    User.find(rules).exec(function (err, result) {
+    User.find(rules).populate('contatos').populate('requests').populate('friends').exec(function (err, result) {
         if (!err) {
             res.send(result);
         }
@@ -285,7 +285,7 @@ router.get('/login', function (req, res) {
  */
 router.get('/all', function (req, res) {
 
-    User.find({}).populate('contatos').populate('requests').exec(function (err, result) {
+    User.find({}).populate('contatos').populate('requests').populate('friends').exec(function (err, result) {
         if (!err) {
             res.send(result);
         }
