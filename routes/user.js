@@ -132,11 +132,11 @@ router.post('/request', function (req, res) {
 });
 
 /*
- Request a friend.
+ Accept a friend request.
 
  Parâmetros:
- - username
- - friend
+ - user id
+ - friend id
  */
 router.post('/request/accept', function (req, res) {
 
@@ -151,9 +151,10 @@ router.post('/request/accept', function (req, res) {
                 return u._id == req.body.friend;
             });
 
-            user.requests = evens;
-
             if (oldLength != evens.length) {
+
+                user.requests = evens;
+
                 var hasFriend = _.contains(user.friends, req.body.friend);
 
                 if (user.friends.indexOf(req.body.friend) == -1)
@@ -167,6 +168,49 @@ router.post('/request/accept', function (req, res) {
                     }
 
                 });
+            } else {
+                res.end(JSON.stringify({'status': 'failed', 'err': 'you dont have this request'}));
+            }
+
+        }
+    });
+});
+
+
+/*
+ Reject a friend request.
+
+ Parâmetros:
+ - user id
+ - friend id
+ */
+router.post('/request/remove', function (req, res) {
+
+    User.findById(req.body.id).exec(function (err, user) {
+        if (err) {
+            res.end(JSON.stringify({'status': 'failed', 'err': err.stack}));
+        } else {
+
+            var oldLength = user.requests.length;
+
+            var evens = _.remove(user.requests, function (u) {
+                return u._id == req.body.friend;
+            });
+
+
+            if (oldLength != evens.length) {
+                user.requests = evens;
+
+                user.save(function (err) {
+                    if (err) {
+                        res.end(JSON.stringify({'status': 'failed', 'err': err.stack}));
+                    } else {
+                        res.end(JSON.stringify({'status': 'success', 'msg': 'request removed'}));
+                    }
+
+                });
+            } else {
+                res.end(JSON.stringify({'status': 'failed', 'err': 'you dont have this request'}));
             }
 
         }
@@ -175,17 +219,42 @@ router.post('/request/accept', function (req, res) {
 
 
 
+/*
+ Remove a friend.
 
-router.post('/friends', function (req, res)
+ Parâmetros:
+ - user id
+ - friend id
+ */
+router.post('/friend/remove', function (req, res)
 {
 
-    var query = { 'username': req.body.username };
-
-    User.findOne(query).exec(function (err, user) {
+    User.findById(req.body.id).exec(function (err, user) {
         if (err) {
-            console.error(err.stack);
+            res.end(JSON.stringify({'status': 'failed', 'err': err.stack}));
         } else {
-            user.friends.push(req.body.friend);
+
+            var oldLength = user.friends.length;
+
+            var evens = _.remove(user.friends, function (u) {
+                return u._id == req.body.friend;
+            });
+
+            if (oldLength != evens.length) {
+                user.friends = evens;
+
+                user.save(function (err) {
+                    if (err) {
+                        res.end(JSON.stringify({'status': 'failed', 'err': err.stack}));
+                    } else {
+                        res.end(JSON.stringify({'status': 'success', 'msg': 'friend removed'}));
+                    }
+
+                });
+            } else {
+                res.end(JSON.stringify({'status': 'failed', 'err': 'you dont have this friend'}));
+            }
+
         }
     });
 
