@@ -1,4 +1,5 @@
 var mongoose = require('mongoose');
+var uniqueValidator = require('mongoose-unique-validator');
 
 // define the schema for our user model
 var userSchema = new mongoose.Schema({
@@ -11,6 +12,10 @@ var userSchema = new mongoose.Schema({
   requests: [ {type: mongoose.Schema.ObjectId, ref: 'User'} ],
   friends: [ {type: mongoose.Schema.ObjectId, ref: 'User'} ]
 });
+
+// Apply the uniqueValidator plugin to userSchema.
+userSchema.plugin(uniqueValidator);
+
 
 // create the model for users and expose it to our app
 module.exports = mongoose.model('User', userSchema);

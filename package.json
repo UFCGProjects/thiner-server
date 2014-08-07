@@ -14,6 +14,7 @@
     "body-parser": "~1.0.0",
     "debug": "~0.7.4",
     "jade": "~1.3.0",
-    "lodash": "*"
+    "lodash": "~2.4.X",
+    "mongoose-unique-validator": "~0.3.0"
   }
 }

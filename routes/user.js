@@ -25,8 +25,6 @@ router.use('/', contactRouter);
 router.post('/', function (req, res) {
     var user = new User();
 
-    console.log(req.body);
-
     user.username = req.body.username.toLowerCase();
     user.password = req.body.password;
     user.email = req.body.email.toLowerCase();
@@ -37,9 +35,12 @@ router.post('/', function (req, res) {
     // Saving it to the database.
     user.save(function (err) {
         if (err) {
-            var result = {'status': 'failed', 'err': err.stack}
+            if (err.errors.username)
+                var result = {'status': 'failed', 'err': 'username taken'};
+            if (err.errors.email)
+                var result = {'status': 'failed', 'err': 'email taken'};
         } else {
-            var result = {'status': 'user created'};
+            var result = {'status': 'success', 'msg': 'user created'};
         }
 
         res.end(JSON.stringify(result));
