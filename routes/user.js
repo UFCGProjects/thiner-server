@@ -25,6 +25,8 @@ router.use('/', contactRouter);
 router.post('/', function (req, res) {
     var user = new User();
 
+    console.log(req.body);
+
     user.username = req.body.username.toLowerCase();
     user.password = req.body.password;
     user.email = req.body.email.toLowerCase();
@@ -45,6 +47,27 @@ router.post('/', function (req, res) {
 
 });
 
+/*
+ Recuperar um usuário.
+
+ Parâmetros:
+ - id
+ */
+router.get('/', function (req, res) {
+
+    User.findById(req.query.id).populate('contatos').populate('requests').populate('friends').exec(function (err, users) {
+        if (!err) {
+
+            var result = {};
+            result.users = users;
+
+            res.send(result);
+        }
+    });
+});
+
+
+
 
 /*
  Editar um usuário.
@@ -57,7 +80,7 @@ router.post('/', function (req, res) {
  - lastname
  */
 router.post('/edit', function (req, res) {
-    var query = { 'username': req.body.username.toLowerCase() };
+    // var query = { 'username': req.body.username.toLowerCase() };
 
     var update = {};
 
@@ -74,11 +97,11 @@ router.post('/edit', function (req, res) {
         update['lastname'] = req.body.lastname.toLowerCase();
 
 
-    User.findOneAndUpdate(query, update, function (err, data) {
+    User.findByIdAndUpdate(req.body.id, update, function (err, data) {
         if (err) {
             res.end(JSON.stringify({'status': 'failed', 'err': err.stack}));
         } else if (data) {
-            res.end(JSON.stringify({'status': 'user edited'}));
+            res.end(JSON.stringify({'status': 'success', 'msg': 'user edited'}));
         } else {
             res.end(JSON.stringify({'status': 'failed', 'err': 'user not found'}));
         }
@@ -96,8 +119,12 @@ router.post('/edit', function (req, res) {
 router.get('/search', function (req, res) {
     var rules = { 'username': new RegExp('^' + req.query.username + '$', "i") };
 
-    User.find(rules).populate('contatos').populate('requests').populate('friends').exec(function (err, result) {
+    User.find(rules).populate('contatos').populate('requests').populate('friends').exec(function (err, users) {
         if (!err) {
+
+            var result = {};
+            result.users = users;
+
             res.send(result);
         }
     });
@@ -148,7 +175,10 @@ router.post('/request/accept', function (req, res) {
             var oldLength = user.requests.length;
 
             var evens = _.remove(user.requests, function (u) {
-                return u._id == req.body.friend;
+
+                console.log(u, req.body.friend, u._id === req.body.friend);
+
+                return u._id === req.body.friend;
             });
 
             if (oldLength != evens.length) {
@@ -271,8 +301,12 @@ router.post('/friend/remove', function (req, res)
 router.get('/login', function (req, res) {
     var rules = {'username': req.query.username, 'password': req.query.password};
 
-    User.find(rules).exec(function (err, result) {
+    User.find(rules).exec(function (err, users) {
         if (!err) {
+            var result = {};
+
+            result.users = users;
+
             res.send(result);
         }
     });
