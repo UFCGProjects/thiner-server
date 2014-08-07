@@ -36,9 +36,9 @@ router.post('/', function (req, res) {
     user.save(function (err) {
         if (err) {
             if (err.errors.username)
-                var result = {'status': 'failed', 'err': 'username taken'};
+                var result = {'status': 'failed', 'err': 'username already registered.'};
             if (err.errors.email)
-                var result = {'status': 'failed', 'err': 'email taken'};
+                var result = {'status': 'failed', 'err': 'email already registered.'};
         } else {
             var result = {'status': 'success', 'msg': 'user created'};
         }
@@ -175,12 +175,13 @@ router.post('/request/accept', function (req, res) {
 
             var oldLength = user.requests.length;
 
-            var evens = _.remove(user.requests, function (u) {
+            var evens = [];
 
-                console.log(u, req.body.friend, u._id === req.body.friend);
-
-                return u._id === req.body.friend;
-            });
+            for (var i = 0; i < user.requests.length; i++) {
+                if (user.requests[i] != req.body.friend) {
+                    evens.push(user.requests[i]);
+                }
+            }
 
             if (oldLength != evens.length) {
 
@@ -224,10 +225,13 @@ router.post('/request/remove', function (req, res) {
 
             var oldLength = user.requests.length;
 
-            var evens = _.remove(user.requests, function (u) {
-                return u._id == req.body.friend;
-            });
+            var evens = [];
 
+            for (var i = 0; i < user.requests.length; i++) {
+                if (user.requests[i] != req.body.friend) {
+                    evens.push(user.requests[i]);
+                }
+            }
 
             if (oldLength != evens.length) {
                 user.requests = evens;
@@ -257,8 +261,7 @@ router.post('/request/remove', function (req, res) {
  - user id
  - friend id
  */
-router.post('/friend/remove', function (req, res)
-{
+router.post('/friend/remove', function (req, res) {
 
     User.findById(req.body.id).exec(function (err, user) {
         if (err) {
@@ -267,9 +270,13 @@ router.post('/friend/remove', function (req, res)
 
             var oldLength = user.friends.length;
 
-            var evens = _.remove(user.friends, function (u) {
-                return u._id == req.body.friend;
-            });
+            var evens = [];
+
+            for (var i = 0; i < user.friends.length; i++) {
+                if (user.friends[i] != req.body.friend) {
+                    evens.push(user.friends[i]);
+                }
+            }
 
             if (oldLength != evens.length) {
                 user.friends = evens;
