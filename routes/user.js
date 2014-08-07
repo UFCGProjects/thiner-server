@@ -31,19 +31,37 @@ router.post('/', function (req, res) {
     user.firstname = req.body.firstname.toLowerCase();
     user.lastname = req.body.lastname.toLowerCase();
 
+    // var query = {"username": req.body.username.toLowerCase()}
 
-    // Saving it to the database.
-    user.save(function (err) {
-        if (err) {
-            if (err.errors.username)
+    User.find({"username": req.body.username.toLowerCase()}).exec(function (err, users) {
+        if (!err) {
+
+            if (users.length > 0) {
                 var result = {'status': 'failed', 'err': 'username already registered.'};
-            if (err.errors.email)
-                var result = {'status': 'failed', 'err': 'email already registered.'};
-        } else {
-            var result = {'status': 'success', 'msg': 'user created'};
-        }
+                res.end(JSON.stringify(result));
+            } else {
+                User.find({"email": req.body.email.toLowerCase()}).exec(function (err, users) {
+                    if (!err) {
 
-        res.end(JSON.stringify(result));
+                        if (users.length > 0) {
+                            var result = {'status': 'failed', 'err': 'email already registered.'};
+                            res.end(JSON.stringify(result));
+                        } else {
+                            // Saving it to the database.
+                            user.save(function (err) {
+                                if (err) {
+                                    var result = {'status': 'failed', 'err': err.stack};
+                                } else {
+                                    var result = {'status': 'success', 'msg': 'user created'};
+                                }
+
+                                res.end(JSON.stringify(result));
+                            });
+                        }
+                    }
+                });
+            }
+        }
     });
 
 });
