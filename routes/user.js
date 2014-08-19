@@ -361,7 +361,7 @@ router.post('/friend/remove', function (req, res) {
 router.get('/login', function (req, res) {
     var rules = {'username': req.query.username, 'password': req.query.password};
 
-    User.find(rules).exec(function (err, users) {
+    User.find(rules).populate('contatos').populate('friends').populate('requests').exec(function (err, users) {
         if (!err) {
             var result = {};
 
