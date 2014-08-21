@@ -55,7 +55,7 @@ router.post('/', function (req, res) {
                                     var result = {'status': 'success', 'msg': 'user created'};
                                 }
 
-                                res.end(JSON.stringify(result));
+                                res.json(result);
                             });
                         }
                     }
@@ -74,13 +74,27 @@ router.post('/', function (req, res) {
  */
 router.get('/', function (req, res) {
 
-    User.findById(req.query.id).populate('contatos').populate('requests').populate('friends').exec(function (err, users) {
-        if (!err) {
+    User.findById(req.query.id).populate('contatos').populate('requests').populate('friends').exec(function (err, docs) {
+        if (err) {
+            res.json(500);
+        } else {
 
-            var result = {};
-            result.users = users;
+            var options = {
+                path: 'friends.contatos',
+                model: 'Contato'
+            };
 
-            res.send(result);
+            User.populate(docs, options, function (err, users) {
+                if (err) {
+                    res.json(500);
+                } else {
+                    var result = {};
+                    result.users = users;
+
+                    res.json(result);
+                }
+            });
+
         }
     });
 });
@@ -186,17 +200,17 @@ router.post('/request', function (req, res) {
  */
 router.post('/request/accept', function (req, res) {
 
-    User.findById(req.body.id).exec(function (err, user) {
+    User.findById(req.param('id')).exec(function (err, user) {
         if (err) {
-            res.end(JSON.stringify({'status': 'failed', 'err': err.stack}));
-        } else {
+            res.json({'status': 'failed', 'err': err.stack});
+        } else if (user) {
 
             var oldLength = user.requests.length;
 
             var evens = [];
 
             for (var i = 0; i < user.requests.length; i++) {
-                if (user.requests[i] != req.body.friend) {
+                if (user.requests[i] != req.param('friend')) {
                     evens.push(user.requests[i]);
                 }
             }
@@ -205,19 +219,19 @@ router.post('/request/accept', function (req, res) {
 
                 user.requests = evens;
 
-                var hasFriend = _.contains(user.friends, req.body.friend);
+                var hasFriend = _.contains(user.friends, req.param('friend'));
 
                 if (user.friends.indexOf(req.body.friend) == -1)
-                    user.friends.push(req.body.friend);
+                    user.friends.push(req.param('friend'));
 
                 user.save(function (err) {
                     if (err) {
-                        res.end(JSON.stringify({'status': 'failed', 'err': err.stack}));
+                        res.json(400, {'status': 'failed', 'err': err.stack});
                     } else {
 
                         User.findById(req.body.friend).exec(function (err, user) {
                             if (err) {
-                                res.end(JSON.stringify({'status': 'failed', 'err': err.stack}));
+                                res.json(400, {'status': 'failed', 'err': err.stack});
                             } else {
 
                                 var evens = [];
@@ -237,9 +251,9 @@ router.post('/request/accept', function (req, res) {
 
                                 user.save(function (err) {
                                     if (err) {
-                                        res.end(JSON.stringify({'status': 'failed', 'err': err.stack}));
+                                        res.json(400, {'status': 'failed', 'err': err.stack});
                                     } else {
-                                        res.end(JSON.stringify({'status': 'success', 'msg': 'request accepted'}));
+                                        res.json(200, {'status': 'success', 'msg': 'request accepted'});
                                     }
 
                                 });
@@ -247,12 +261,12 @@ router.post('/request/accept', function (req, res) {
                             }
                         });
 
-                        res.end(JSON.stringify({'status': 'success', 'msg': 'request accepted'}));
+                        res.json(200, {'status': 'success', 'msg': 'request accepted'});
                     }
 
                 });
             } else {
-                res.end(JSON.stringify({'status': 'failed', 'err': 'you dont have this request'}));
+                res.json(400, {'status': 'failed', 'err': 'you dont have this request'});
             }
 
         }
