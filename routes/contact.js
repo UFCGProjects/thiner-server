@@ -7,81 +7,88 @@ var Contato = require('../models/contato');
 
 
 /*
-  Adicionar um contato ao usuário.
+ Adicionar um contato ao usuário.
 
-  Parâmetros:
-    - username
-    - DDD
-    - numero do telefone
-    - Operadora
-*/
+ Parâmetros:
+ - Id : id do usuario
+ - DDD : DDD do telefone
+ - numero : numero do telefone
+ - operadora : operadora do telefone
+ */
 router.post('/contact', function (req, res) {
-  var rules = { 'username': req.body.username.toLowerCase() };
 
-  User.findOne(rules).exec(function (err, user) {
-    if (!err) {
+    var id = req.param('id');
+    var ddd = req.param('ddd');
+    var number = req.param('number');
+    var operadora = req.param('operadora');
 
-      var contato = new Contato();
+    if (!operadora || !id || !number || !ddd) {
+        res.json(400, {'status': 'failed', 'err': 'missing paramters'});
+    } else {
 
-      contato.DDD = req.body.DDD;
-      contato.numero = req.body.numero;
-      contato.operadora = req.body.operadora.toLowerCase();
+//    var rules = { 'username': req.body.username.toLowerCase() };
 
-      contato.save(function (err) {
-        if (err) {
-          console.error(err.stack);
-        } else {
+        User.findById(id).exec(function (err, user) {
+            if (!err) {
 
-          console.log(user, contato);
+                var contato = new Contato();
 
-          user.contatos.push(contato._id);
+                contato.DDD = ddd
+                contato.numero = number
+                contato.operadora = operadora.toLowerCase();
 
-          user.save(function (err) {
-            if (err) {
-              console.error(err.stack);
-            } else {
-              console.log('Contato adicionado', req.body);
-              res.end('{status: success}');
+                contato.save(function (err) {
+                    if (err) {
+                        res.json(400, {'status': 'failed', 'err': err.stack});
+                    } else {
+                        user.contatos.push(contato._id);
+
+                        user.save(function (err) {
+                            if (err) {
+                                res.json(400, {'status': 'failed', 'err': err.stack});
+                            } else {
+                                res.json(200, {'status': 'success'});
+                            }
+                        });
+                    }
+                });
             }
-          });
-        }
-      });
+        });
     }
-  });
 });
 
 
 /*
-  Editar um contato.
+ Editar um contato.
 
-  Parâmetros:
-    - contato_id
-    - DDD
-    - Numero do Telefone
-    - Operadora
-*/
+ Parâmetros:
+ - contato_id
+ - DDD
+ - Numero do Telefone
+ - Operadora
+ */
 router.post('/contact/edit', function (req, res) {
-  var update = {};
+    var update = {};
 
-  if (req.body.DDD)
-    update['DDD'] = req.body.DDD;
+    if (req.body.DDD)
+        update['DDD'] = req.body.DDD;
 
-  if (req.body.numero)
-    update['numero'] = req.body.numero.toLowerCase();
+    if (req.body.numero)
+        update['numero'] = req.body.numero.toLowerCase();
 
-  if (req.body.operador)
-    update['operador'] = req.body.operador.toLowerCase();
+    if (req.body.operador)
+        update['operador'] = req.body.operador.toLowerCase();
 
 
-  Contato.findByIdAndUpdate(req.body.id, update, function (err, data) {
-    if (err) {
-      res.end(JSON.stringify({'status': 'failed', 'err': err.stack}));
-    } else if (data) {
-      res.end(JSON.stringify({'status': 'contact edited'}));
-    } else {
-      res.end(JSON.stringify({'status': 'failed', 'err': 'contact not found'}));
-    }
-  });
+    Contato.findByIdAndUpdate(req.body.id, update, function (err, data) {
+        if (err) {
+            res.json(400, {'status': 'failed', 'err': err.stack});
+        } else if (data) {
+            res.json(200, {'status': 'contact edited'});
+        } else {
+            res.json(400, {'status': 'failed', 'err': 'contact not found'});
+        }
+    });
 });
 
 

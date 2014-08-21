@@ -37,25 +37,21 @@ router.post('/', function (req, res) {
         if (!err) {
 
             if (users.length > 0) {
-                var result = {'status': 'failed', 'err': 'username already registered.'};
-                res.end(JSON.stringify(result));
+                res.json(200, {'status': 'failed', 'err': 'username already registered.'});
             } else {
                 User.find({"email": req.body.email.toLowerCase()}).exec(function (err, users) {
                     if (!err) {
 
                         if (users.length > 0) {
-                            var result = {'status': 'failed', 'err': 'email already registered.'};
-                            res.end(JSON.stringify(result));
+                            res.json(200, {'status': 'failed', 'err': 'email already registered.'});
                         } else {
                             // Saving it to the database.
                             user.save(function (err) {
                                 if (err) {
-                                    var result = {'status': 'failed', 'err': err.stack};
+                                    res.json(200, {'status': 'failed', 'err': err.stack});
                                 } else {
-                                    var result = {'status': 'success', 'msg': 'user created'};
+                                    res.json(400, {'status': 'success', 'msg': 'user created'});
                                 }
-
-                                res.json(result);
                             });
                         }
                     }
